@@ -1,0 +1,47 @@
+
+#include <Arduino.h>
+#include <Ultrasonic.h>
+#include <TM1637Display.h>
+#include <Servo.h>
+
+Ultrasonic ultrasonic(7, 6);
+#define CLK 3
+#define DIO 2
+TM1637Display display(CLK, DIO);
+Servo servo;
+#define SERVO_PIN 9
+const int distanceSeuil = 10;
+const unsigned long delaiActivation = 3000;
+unsigned long dernierTempsActivation = 0;
+int compteur = 0;
+
+void setup() {
+  Serial.begin(9600);
+
+  servo.attach(SERVO_PIN);
+  servo.write(0); 
+  display.setBrightness(0x0f);
+  display.showNumberDec(0);
+}
+
+void distribuerGel() {
+  servo.write(90);  
+  delay(500);      
+  servo.write(0);   
+  delay(500);
+}
+
+void loop() {
+  long distance = ultrasonic.read(); 
+  Serial.print("Distance: ");
+  Serial.println(distance);
+
+    if (distance > 0 && distance < distanceSeuil && (millis() - dernierTempsActivation) > delaiActivation) {
+    distribuerGel();            
+    compteur++;                 
+    display.showNumberDec(compteur, true);  
+    dernierTempsActivation = millis();      
+  }
+
+  delay(100); 
+}
